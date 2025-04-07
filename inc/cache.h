@@ -13,7 +13,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+/*
 
+@Hari
+Need to add a new function for set and way derivation, will make the get_set and get_way functions redundant for non-LLC
+
+*/
 #ifndef CACHE_H
 #define CACHE_H
 
@@ -83,6 +88,13 @@ public:
 
   uint32_t get_set(uint64_t address);
   uint32_t get_way(uint64_t address, uint32_t set);
+
+  #ifdef SASSCACHE
+  std::vector<uint64_t> get_llc_set(uint64_t address, uint64_t cpu);
+  uint64_t get_idx(uint64_t address, uint64_t way);
+  uint64_t get_id(uint64_t address, uint64_t cpu, uint64_t idx, uint64_t way);
+  uint8_t coverageBits = 0; // change
+  #endif
 
   int invalidate_entry(uint64_t inval_addr);
   int prefetch_line(uint64_t pf_addr, bool fill_this_level, uint32_t prefetch_metadata);

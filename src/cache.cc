@@ -13,7 +13,18 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+/*
 
+Plan Of Action:
+  1] Implement the new IGL function, that is, given set, cpu -> return array of possible locations
+  2] Implement the inner ISL functions
+
+7/04/2025
+  @Hari: For now I'll keep it simple, the IGL will be same as normal set associative cache, but separate interface
+
+Note: All replacement policies are random
+
+*/
  
 #include "cache.h"
 
@@ -32,6 +43,20 @@
 extern VirtualMemory vmem;
 extern uint8_t warmup_complete[NUM_CPUS];
 
+bool check_string(std::string a, std::string req)
+{
+  int n = a.size(), m = req.size();
+
+  for (int i = 0; i + m - 1 < n; i++) {
+    if (a.substr(i, m) == req) {
+      return 1;
+    }
+  }
+
+  return 0;
+}
+
+
 void CACHE::handle_fill()
 {
   while (writes_available_this_cycle > 0) {
@@ -40,7 +65,22 @@ void CACHE::handle_fill()
       return;
 
     // find victim
+    #ifdef SASSCACHE
+    if (check_string(NAME,"LLC")) {
+      std::vector<uint64_t> indices = get_llc_set(fill_mshr->address, fill_mshr->cpu);
+
+      // replacement is random by default
+      for (size_t i=0; i < NUM_WAY; i++) {
+
+      }
+
+    }
+    else {
+      uint32_t set = get_set(fill_mshr->address);
+    }
+    #elif
     uint32_t set = get_set(fill_mshr->address);
+    #endif
 
     auto set_begin = std::next(std::begin(block), set * NUM_WAY);
     auto set_end = std::next(set_begin, NUM_WAY);
@@ -403,6 +443,53 @@ void CACHE::operate_reads()
   PQ.operate();
   VAPQ.operate();
 }
+
+#ifdef SASSCACHE
+std::vector<uint64_t> CACHE::get_llc_set(uint64_t address, uint64_t cpu) {
+
+  if (!check_string(NAME, "LLC")) {
+    std::cerr << "get_llc_set() called on non-LLC cache" << std::endl;
+    exit(1);
+  }
+
+/*
+Say set bits are l, we have t coverage bits. idx should have l + t bits
+*/
+
+  uint64_t idx[NUM_WAY]; 
+  for (size_t i=0; i < NUM_WAY; i++) {
+    idx[i] = get_idx(address, i);
+    if (idx[i] >> (lg2(NUM_SET) + coverageBits) > 0) {
+      std::cerr << "get_idx violates coverage bits and numset bits" << std::endl;
+      exit(1);
+    }
+  }
+
+  std::vector<uint64_t> sets(NUM_WAY);
+  for (size_t i=0; i < NUM_WAY; i++) {
+    sets[i] = get_id(address, cpu, idx[i],i);
+    if (sets[i] >> lg2(NUM_SET) > 0) {
+      std::cerr << "get_id violates numset bits" << std::endl;
+      exit(1);
+    }
+  }
+
+  return sets;
+
+}
+
+uint64_t CACHE::get_idx(uint64_t address, uint64_t way) {
+
+  return ((address >> OFFSET_BITS) & bitmask(lg2(NUM_SET)));
+
+}
+
+uint64_t CACHE::get_id(uint64_t address, uint64_t cpu, uint64_t idx, uint64_t way) {
+
+  return ((address >> OFFSET_BITS) & bitmask(lg2(NUM_SET)));
+
+}
+#endif
 
 uint32_t CACHE::get_set(uint64_t address) { return ((address >> OFFSET_BITS) & bitmask(lg2(NUM_SET))); }
 
