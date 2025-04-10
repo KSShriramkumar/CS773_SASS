@@ -36,6 +36,17 @@ Note: All replacement policies are random
 #include "util.h"
 #include "vmem.h"
 
+
+//Shriram 
+#define LLC_WAYS 16
+#include <random>
+
+std::random_device rdev;
+std::mt19937 rgen(rdev());
+std::uniform_int_distribution<int> idist(0,LLC_WAYS);
+
+//Rand int generator 
+
 #ifndef SANITY_CHECK
 #define NDEBUG
 #endif
@@ -64,31 +75,43 @@ void CACHE::handle_fill()
     if (fill_mshr == std::end(MSHR) || fill_mshr->event_cycle > current_cycle)
       return;
 
+    uint32_t set;
+    uint32_t way;
     // find victim
     #ifdef SASSCACHE
     if (check_string(NAME,"LLC")) {
       std::vector<uint64_t> indices = get_llc_set(fill_mshr->address, fill_mshr->cpu);
 
       // replacement is random by default
-      for (size_t i=0; i < NUM_WAY; i++) {
+      int rand_blk = idist(rgen);
 
-      }
+      way = rand_blk;
+      set = indices[rand_blk];
 
     }
     else {
-      uint32_t set = get_set(fill_mshr->address);
+      set = get_set(fill_mshr->address);
+      auto set_begin = std::next(std::begin(block), set * NUM_WAY);
+      auto set_end = std::next(set_begin, NUM_WAY);
+      auto first_inv = std::find_if_not(set_begin, set_end, is_valid<BLOCK>());
+      way = std::distance(set_begin, first_inv);
+      if (way == NUM_WAY)
+        way = impl_replacement_find_victim(fill_mshr->cpu, fill_mshr->instr_id, set, &block.data()[set * NUM_WAY], fill_mshr->ip, fill_mshr->address,
+                                           fill_mshr->type);
     }
     #elif
-    uint32_t set = get_set(fill_mshr->address);
-    #endif
-
+    set = get_set(fill_mshr->address);
     auto set_begin = std::next(std::begin(block), set * NUM_WAY);
     auto set_end = std::next(set_begin, NUM_WAY);
     auto first_inv = std::find_if_not(set_begin, set_end, is_valid<BLOCK>());
-    uint32_t way = std::distance(set_begin, first_inv);
+    way = std::distance(set_begin, first_inv);
     if (way == NUM_WAY)
       way = impl_replacement_find_victim(fill_mshr->cpu, fill_mshr->instr_id, set, &block.data()[set * NUM_WAY], fill_mshr->ip, fill_mshr->address,
                                          fill_mshr->type);
+    #endif
+
+
+
 
     bool success = filllike_miss(set, way, *fill_mshr);
     if (!success)
@@ -119,7 +142,23 @@ void CACHE::handle_writeback()
     // access cache
     uint32_t set = get_set(handle_pkt.address);
     uint32_t way = get_way(handle_pkt.address, set);
+    #ifdef SASSCACHE
+    if(check_string(NAME,"LLC")){
+      std::vector<uint64_t> indices = get_llc_set(handle_pkt.address, handle_pkt.cpu);
 
+      // Check for block across indices
+
+      way = NUM_WAY;
+      for (size_t i=0; i < NUM_WAY; i++) {
+          if(block[indices[i] * NUM_WAY + i].address == handle_pkt.address){
+            way = i;
+            set = indices[i];
+            break;
+          }
+      }
+      
+    } 
+    #endif
     BLOCK& fill_block = block[set * NUM_WAY + way];
 
     if (way < NUM_WAY) // HIT
@@ -139,6 +178,30 @@ void CACHE::handle_writeback()
         success = readlike_miss(handle_pkt);
       } else {
         // find victim
+        uint32_t set;
+        // find victim
+        #ifdef SASSCACHE
+        if (check_string(NAME,"LLC")) {
+          std::vector<uint64_t> indices = get_llc_set(handle_pkt.address, handle_pkt.cpu);
+    
+          int rand_blk = idist(rgen);
+
+          way = rand_blk;
+          set = indices[rand_blk];
+    
+        }
+        else {
+          set = get_set(handle_pkt.address);
+          auto set_begin = std::next(std::begin(block), set * NUM_WAY);
+          auto set_end = std::next(set_begin, NUM_WAY);
+          auto first_inv = std::find_if_not(set_begin, set_end, is_valid<BLOCK>());
+          way = std::distance(set_begin, first_inv);
+          if (way == NUM_WAY)
+            way = impl_replacement_find_victim(handle_pkt.cpu, handle_pkt.instr_id, set, &block.data()[set * NUM_WAY], handle_pkt.ip, handle_pkt.address,
+                                               handle_pkt.type);
+        }
+        #elif
+        set = get_set(handle_pkt.address);
         auto set_begin = std::next(std::begin(block), set * NUM_WAY);
         auto set_end = std::next(set_begin, NUM_WAY);
         auto first_inv = std::find_if_not(set_begin, set_end, is_valid<BLOCK>());
@@ -146,7 +209,7 @@ void CACHE::handle_writeback()
         if (way == NUM_WAY)
           way = impl_replacement_find_victim(handle_pkt.cpu, handle_pkt.instr_id, set, &block.data()[set * NUM_WAY], handle_pkt.ip, handle_pkt.address,
                                              handle_pkt.type);
-
+        #endif
         success = filllike_miss(set, way, handle_pkt);
       }
 
@@ -172,11 +235,30 @@ void CACHE::handle_read()
 
     // A (hopefully temporary) hack to know whether to send the evicted paddr or
     // vaddr to the prefetcher
-    ever_seen_data |= (handle_pkt.v_address != handle_pkt.ip);
 
+    ever_seen_data |= (handle_pkt.v_address != handle_pkt.ip);
     uint32_t set = get_set(handle_pkt.address);
     uint32_t way = get_way(handle_pkt.address, set);
+    #ifdef SASSCACHE
+    
+    // Shriram
+    
+    if(check_string(NAME,"LLC")){
+      std::vector<uint64_t> indices = get_llc_set(handle_pkt.address, handle_pkt.cpu);
 
+      // Check for block across indices
+
+      way = NUM_WAY;
+      for (size_t i=0; i < NUM_WAY; i++) {
+          if(block[indices[i] * NUM_WAY + i].address == handle_pkt.address){
+            way = i;
+            set = indices[i];
+            break;
+          }
+      }
+
+    } 
+    #endif
     if (way < NUM_WAY) // HIT
     {
       readlike_hit(set, way, handle_pkt);

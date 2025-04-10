@@ -1,0 +1,6 @@
+{
+    "files.associations": {
+        " \"*.pdf\"": "pdf",
+        "cstdint": "cpp"
+    }
+}
