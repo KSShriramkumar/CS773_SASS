@@ -43,7 +43,7 @@ Note: All replacement policies are random
 
 std::random_device rdev;
 std::mt19937 rgen(rdev());
-std::uniform_int_distribution<int> idist(0,LLC_WAYS);
+std::uniform_int_distribution<int> idist(0,LLC_WAYS-1);
 
 //Rand int generator 
 
@@ -188,6 +188,7 @@ void CACHE::handle_writeback()
 
           way = rand_blk;
           set = indices[rand_blk];
+  
     
         }
         else {
