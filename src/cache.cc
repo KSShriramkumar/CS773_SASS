@@ -54,6 +54,105 @@ std::uniform_int_distribution<int> idist(0,LLC_WAYS-1);
 extern VirtualMemory vmem;
 extern uint8_t warmup_complete[NUM_CPUS];
 
+
+
+////////////////////////////////////////// Crypto Functions ////////////////////////////////////////////
+
+#define SPECK128R(x, y, k)                                                     \
+  (x = ROR64(x, 8), x += y, x ^= k, y = ROL64(y, 3), y ^= x)
+#define ROR64(x, r) (((x) >> (r)) | ((x) << (64 - (r))))
+#define ROL64(x, r) (((x) << (r)) | ((x) >> (64 - (r))))
+
+void speck128Encrypt(uint64_t* u, uint64_t* v, uint64_t key[])
+{
+  uint64_t i, x = *u, y = *v;
+
+  for (i = 0; i < 32; i++)
+    SPECK128R(x, y, key[i]);
+
+  *u = x;
+  *v = y;
+}
+
+void speck128ExpandKey(uint64_t K[], uint64_t key[])
+{
+  uint64_t i, B = K[1], A = K[0];
+
+  for (i = 0; i < 32; i++)
+  {
+    key[i] = A;
+    SPECK128R(B, A, i);
+  }
+}
+
+std::pair<uint64_t*, uint64_t*> getKeys()
+{
+  uint64_t K[] = {0x06FADE6001020304, 0x01020304CAB4BEEF};
+
+  uint64_t* _keyId0 = new uint64_t[32];
+  uint64_t* _keyId1 = new uint64_t[32];
+  uint64_t* _keyIdOther = new uint64_t[32];
+
+  speck128ExpandKey(K, _keyId0);
+  K[0] ^= 0x1234ABCD1234ABCD;
+  speck128ExpandKey(K, _keyId1);
+  K[0] ^= 0x1234ABCD1234ABCD ^ 0xBCDE789ABCDE789A;
+  speck128ExpandKey(K, _keyIdOther);
+}
+
+std::vector<tag_t> SASSCache::getWayIndices(tag_t cl, const CacheContext& context) const {
+  uint64_t v[16], tweak;
+  uint64_t c[2];
+  uint64_t nSetsMask = (1 << _nSetsBits) - 1; 
+  // new addition
+  uint64_t nSetsMasksWithT = (1 << (_nSetsBits + _t)) - 1;
+  // end of new addition
+  uint64_t indicesPerBlock = (uint64_t) floor((double) 128 / (_nSetsBits + _t));
+  uint32_t round1Iterations = (uint32_t) ceil(
+          (double) _nPartitions / indicesPerBlock);
+
+  uint64_t *key = _keyIdOther;
+
+  if (context.getCoreId() == 0) {
+      key = _keyId0;
+  } else if (context.getCoreId() == 1){
+      key = _keyId1;
+  }
+
+  // Round 1
+  for (uint32_t i = 0; i < round1Iterations; i++) {
+      v[2 * i] = cl & 0xFFFFFFFFFFFFFFFF;
+      v[2 * i + 1] = i;
+      speck128Encrypt(v + 2 * i, v + 2 * i + 1, key);
+  }
+
+  // Round 2
+
+  std::vector<tag_t> wayIndices(_nWays);
+  int partitionSize = (_nWays / _nPartitions);
+  size_t p = 0;
+
+  for (size_t oBlock = 0; oBlock < round1Iterations; oBlock++) {
+      for (size_t iBlock = 0; iBlock < indicesPerBlock; iBlock++) {
+          c[0] = (v[2 * oBlock] >> (iBlock * (_nSetsBits + _t))) & nSetsMasksWithT;
+          c[1] = p;
+          speck128Encrypt(c, c + 1, key);
+          tag_t idx = c[0] & nSetsMask;
+          for (size_t w = 0; w < partitionSize; w++)
+              wayIndices[p * partitionSize + w] = idx;
+          p++;
+          if (p == _nPartitions) {
+              return wayIndices;
+          }
+      }
+  }
+
+  return wayIndices;
+}
+
+
+///////////////////////////////////////////////////////////////////////////////////////////////////
+
 bool check_string(std::string a, std::string req)
 {
   int n = a.size(), m = req.size();
@@ -561,7 +660,7 @@ Say set bits are l, we have t coverage bits. idx should have l + t bits
 
 }
 
-uint64_t CACHE::get_idx(uint64_t address, uint64_t way) {
+uint64_t CACHE::get_idx(uint64_t address, uint64_t way, uint64_t cpu) {
 
   return ((address >> OFFSET_BITS) & bitmask(lg2(NUM_SET)));
 
