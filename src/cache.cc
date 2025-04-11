@@ -98,58 +98,8 @@ std::pair<uint64_t*, uint64_t*> getKeys()
   speck128ExpandKey(K, _keyId1);
   K[0] ^= 0x1234ABCD1234ABCD ^ 0xBCDE789ABCDE789A;
   speck128ExpandKey(K, _keyIdOther);
+  return std::make_pair(_keyId0, _keyId1);
 }
-
-std::vector<tag_t> SASSCache::getWayIndices(tag_t cl, const CacheContext& context) const {
-  uint64_t v[16], tweak;
-  uint64_t c[2];
-  uint64_t nSetsMask = (1 << _nSetsBits) - 1; 
-  // new addition
-  uint64_t nSetsMasksWithT = (1 << (_nSetsBits + _t)) - 1;
-  // end of new addition
-  uint64_t indicesPerBlock = (uint64_t) floor((double) 128 / (_nSetsBits + _t));
-  uint32_t round1Iterations = (uint32_t) ceil(
-          (double) _nPartitions / indicesPerBlock);
-
-  uint64_t *key = _keyIdOther;
-
-  if (context.getCoreId() == 0) {
-      key = _keyId0;
-  } else if (context.getCoreId() == 1){
-      key = _keyId1;
-  }
-
-  // Round 1
-  for (uint32_t i = 0; i < round1Iterations; i++) {
-      v[2 * i] = cl & 0xFFFFFFFFFFFFFFFF;
-      v[2 * i + 1] = i;
-      speck128Encrypt(v + 2 * i, v + 2 * i + 1, key);
-  }
-
-  // Round 2
-
-  std::vector<tag_t> wayIndices(_nWays);
-  int partitionSize = (_nWays / _nPartitions);
-  size_t p = 0;
-
-  for (size_t oBlock = 0; oBlock < round1Iterations; oBlock++) {
-      for (size_t iBlock = 0; iBlock < indicesPerBlock; iBlock++) {
-          c[0] = (v[2 * oBlock] >> (iBlock * (_nSetsBits + _t))) & nSetsMasksWithT;
-          c[1] = p;
-          speck128Encrypt(c, c + 1, key);
-          tag_t idx = c[0] & nSetsMask;
-          for (size_t w = 0; w < partitionSize; w++)
-              wayIndices[p * partitionSize + w] = idx;
-          p++;
-          if (p == _nPartitions) {
-              return wayIndices;
-          }
-      }
-  }
-
-  return wayIndices;
-}
-
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -627,6 +577,13 @@ void CACHE::operate_reads()
 }
 
 #ifdef SASSCACHE
+
+void CACHE::setKeys() {
+  std::pair<uint64_t*, uint64_t*> keys = getKeys();
+  key0 = keys.first;
+  key1 = keys.second;
+}
+
 std::vector<uint64_t> CACHE::get_llc_set(uint64_t address, uint64_t cpu) {
 
   if (!check_string(NAME, "LLC")) {
@@ -634,43 +591,59 @@ std::vector<uint64_t> CACHE::get_llc_set(uint64_t address, uint64_t cpu) {
     exit(1);
   }
 
-/*
-Say set bits are l, we have t coverage bits. idx should have l + t bits
-*/
+  uint64_t v[16], tweak;
+  uint64_t c[2];
 
-  uint64_t idx[NUM_WAY]; 
-  for (size_t i=0; i < NUM_WAY; i++) {
-    idx[i] = get_idx(address, i);
-    if (idx[i] >> (lg2(NUM_SET) + coverageBits) > 0) {
-      std::cerr << "get_idx violates coverage bits and numset bits" << std::endl;
-      exit(1);
-    }
+  uint64_t nSetsMask = (1 << lg2(NUM_SET)) - 1; 
+  // new addition
+  uint64_t nSetsMasksWithT = (1 << (lg2(NUM_SET) + coverageBits)) - 1;
+  // end of new addition
+  uint64_t indicesPerBlock = (uint64_t) floor((double) 128 / (lg2(NUM_SET) + coverageBits));
+  uint32_t round1Iterations = (uint32_t) ceil(
+          (double) npartition / indicesPerBlock);
+
+  uint64_t* key;
+  if (cpu) {
+    key = key1;
+  }
+  else {
+    key = key0;
   }
 
-  std::vector<uint64_t> sets(NUM_WAY);
-  for (size_t i=0; i < NUM_WAY; i++) {
-    sets[i] = get_id(address, cpu, idx[i],i);
-    if (sets[i] >> lg2(NUM_SET) > 0) {
-      std::cerr << "get_id violates numset bits" << std::endl;
-      exit(1);
-    }
+  uint64_t cl = address >> LOG2_BLOCK_SIZE;
+
+  // Round 1
+  for (uint32_t i = 0; i < round1Iterations; i++) {
+      v[2 * i] = cl & 0xFFFFFFFFFFFFFFFF;
+      v[2 * i + 1] = i;
+      speck128Encrypt(v + 2 * i, v + 2 * i + 1, key);
   }
 
-  return sets;
+  // Round 2
+
+  std::vector<uint64_t> wayIndices(NUM_WAY);
+  int partitionSize = (NUM_WAY / npartition);
+  size_t p = 0;
+
+  for (size_t oBlock = 0; oBlock < round1Iterations; oBlock++) {
+      for (size_t iBlock = 0; iBlock < indicesPerBlock; iBlock++) {
+          c[0] = (v[2 * oBlock] >> (iBlock * ((lg2(NUM_SET)) + coverageBits))) & nSetsMasksWithT;
+          c[1] = p;
+          speck128Encrypt(c, c + 1, key);
+          uint64_t idx = c[0] & nSetsMask;
+          for (size_t w = 0; w < partitionSize; w++)
+              wayIndices[p * partitionSize + w] = idx;
+          p++;
+          if (p == 1) {
+              return wayIndices;
+          }
+      }
+  }
+
+  return wayIndices;
 
 }
 
-uint64_t CACHE::get_idx(uint64_t address, uint64_t way, uint64_t cpu) {
-
-  return ((address >> OFFSET_BITS) & bitmask(lg2(NUM_SET)));
-
-}
-
-uint64_t CACHE::get_id(uint64_t address, uint64_t cpu, uint64_t idx, uint64_t way) {
-
-  return ((address >> OFFSET_BITS) & bitmask(lg2(NUM_SET)));
-
-}
 #endif
 
 uint32_t CACHE::get_set(uint64_t address) { return ((address >> OFFSET_BITS) & bitmask(lg2(NUM_SET))); }

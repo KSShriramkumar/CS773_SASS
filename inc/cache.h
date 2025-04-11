@@ -90,9 +90,11 @@ public:
   uint32_t get_way(uint64_t address, uint32_t set);
 
   #ifdef SASSCACHE
+  uint64_t* key0;
+  uint64_t* key1;
+  uint64_t npartition = 1;
+  void setKeys();
   std::vector<uint64_t> get_llc_set(uint64_t address, uint64_t cpu);
-  uint64_t get_idx(uint64_t address, uint64_t way);
-  uint64_t get_id(uint64_t address, uint64_t cpu, uint64_t idx, uint64_t way);
   uint8_t coverageBits = 0; // change
   #endif
 
