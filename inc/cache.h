@@ -95,7 +95,7 @@ public:
   uint64_t npartition = 1;
   void setKeys();
   std::vector<uint64_t> get_llc_set(uint64_t address, uint64_t cpu);
-  uint8_t coverageBits = 0; // change
+  uint8_t coverageBits = -1; // change
   #endif
 
   int invalidate_entry(uint64_t inval_addr);
@@ -132,6 +132,11 @@ public:
         MAX_WRITE(max_write), prefetch_as_load(pref_load), match_offset_bits(wq_full_addr), virtual_prefetch(va_pref), pref_activate_mask(pref_act_mask),
         repl_type(repl), pref_type(pref)
   {
+    #ifdef SASSCACHE
+    if (v1 == "LLC") {
+      setKeys();
+    }
+    #endif
   }
 };
 

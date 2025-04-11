@@ -148,7 +148,7 @@ void CACHE::handle_fill()
         way = impl_replacement_find_victim(fill_mshr->cpu, fill_mshr->instr_id, set, &block.data()[set * NUM_WAY], fill_mshr->ip, fill_mshr->address,
                                            fill_mshr->type);
     }
-    #elif
+    #else
     set = get_set(fill_mshr->address);
     auto set_begin = std::next(std::begin(block), set * NUM_WAY);
     auto set_end = std::next(set_begin, NUM_WAY);
@@ -199,7 +199,7 @@ void CACHE::handle_writeback()
 
       way = NUM_WAY;
       for (size_t i=0; i < NUM_WAY; i++) {
-          if(block[indices[i] * NUM_WAY + i].address == handle_pkt.address){
+        if((block[indices[i] * NUM_WAY + i].address >> LOG2_BLOCK_SIZE) == (handle_pkt.address>> LOG2_BLOCK_SIZE)){
             way = i;
             set = indices[i];
             break;
@@ -250,7 +250,7 @@ void CACHE::handle_writeback()
             way = impl_replacement_find_victim(handle_pkt.cpu, handle_pkt.instr_id, set, &block.data()[set * NUM_WAY], handle_pkt.ip, handle_pkt.address,
                                                handle_pkt.type);
         }
-        #elif
+        #else
         set = get_set(handle_pkt.address);
         auto set_begin = std::next(std::begin(block), set * NUM_WAY);
         auto set_end = std::next(set_begin, NUM_WAY);
@@ -300,7 +300,8 @@ void CACHE::handle_read()
 
       way = NUM_WAY;
       for (size_t i=0; i < NUM_WAY; i++) {
-          if(block[indices[i] * NUM_WAY + i].address == handle_pkt.address){
+        if((block[indices[i] * NUM_WAY + i].address >> LOG2_BLOCK_SIZE) == (handle_pkt.address>> LOG2_BLOCK_SIZE)){
+
             way = i;
             set = indices[i];
             break;
@@ -591,7 +592,7 @@ std::vector<uint64_t> CACHE::get_llc_set(uint64_t address, uint64_t cpu) {
     exit(1);
   }
 
-  uint64_t v[16], tweak;
+  uint64_t v[16];
   uint64_t c[2];
 
   uint64_t nSetsMask = (1 << lg2(NUM_SET)) - 1; 
@@ -631,7 +632,7 @@ std::vector<uint64_t> CACHE::get_llc_set(uint64_t address, uint64_t cpu) {
           c[1] = p;
           speck128Encrypt(c, c + 1, key);
           uint64_t idx = c[0] & nSetsMask;
-          for (size_t w = 0; w < partitionSize; w++)
+          for (size_t w = 0; w < size_t(partitionSize); w++)
               wayIndices[p * partitionSize + w] = idx;
           p++;
           if (p == 1) {
