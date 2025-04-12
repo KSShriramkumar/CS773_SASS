@@ -136,6 +136,7 @@ public:
     if (v1 == "LLC") {
       setKeys();
     }
+    std::cerr << "SassCache config with npartitions = " << npartition << std::endl;
     #endif
   }
 };
