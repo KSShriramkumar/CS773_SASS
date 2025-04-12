@@ -1,0 +1,116 @@
+log_summary_bc-0 : coverage_-1 : 6933408.000000
+log_summary_bc-0 : coverage_-2 : 8010637.000000
+log_summary_bc-0 : coverage_0 : 6465747.500000
+log_summary_bc-0 : coverage_1 : 5684422.000000
+log_summary_bc-0 : coverage_2 : 5980145.500000
+log_summary_bc-0 : noninclusive : 4826508.750000
+log_summary_bc-12 : coverage_-1 : 7083994.750000
+log_summary_bc-12 : coverage_-2 : 8219835.250000
+log_summary_bc-12 : coverage_0 : 6596861.500000
+log_summary_bc-12 : coverage_1 : 5775154.250000
+log_summary_bc-12 : coverage_2 : 6085425.500000
+log_summary_bc-12 : noninclusive : 4891798.500000
+log_summary_bc-3 : coverage_-1 : 6484662.500000
+log_summary_bc-3 : coverage_-2 : 7488189.000000
+log_summary_bc-3 : coverage_0 : 6032661.250000
+log_summary_bc-3 : coverage_1 : 5316964.250000
+log_summary_bc-3 : coverage_2 : 5583439.500000
+log_summary_bc-3 : noninclusive : 4506103.000000
+log_summary_bc-5 : coverage_-1 : 7229771.250000
+log_summary_bc-5 : coverage_-2 : 8549483.750000
+log_summary_bc-5 : coverage_0 : 6659132.000000
+log_summary_bc-5 : coverage_1 : 5754615.750000
+log_summary_bc-5 : coverage_2 : 6091743.250000
+log_summary_bc-5 : noninclusive : 4803248.500000
+log_summary_bfs-10 : coverage_-1 : 1827169.250000
+log_summary_bfs-10 : coverage_-2 : 1886861.000000
+log_summary_bfs-10 : coverage_0 : 1815809.250000
+log_summary_bfs-10 : coverage_1 : 1770656.000000
+log_summary_bfs-10 : coverage_2 : 1789091.250000
+log_summary_bfs-10 : noninclusive : 1687798.000000
+log_summary_bfs-14 : coverage_-1 : 1852625.000000
+log_summary_bfs-14 : coverage_-2 : 1912558.000000
+log_summary_bfs-14 : coverage_0 : 1837442.750000
+log_summary_bfs-14 : coverage_1 : 1791129.250000
+log_summary_bfs-14 : coverage_2 : 1811098.000000
+log_summary_bfs-14 : noninclusive : 1704933.750000
+log_summary_bfs-3 : coverage_-1 : 2064344.250000
+log_summary_bfs-3 : coverage_-2 : 2193837.000000
+log_summary_bfs-3 : coverage_0 : 2020112.500000
+log_summary_bfs-3 : coverage_1 : 1928153.250000
+log_summary_bfs-3 : coverage_2 : 1963974.500000
+log_summary_bfs-3 : noninclusive : 1798970.500000
+log_summary_bfs-8 : coverage_-1 : 1766519.500000
+log_summary_bfs-8 : coverage_-2 : 1827808.000000
+log_summary_bfs-8 : coverage_0 : 1748464.500000
+log_summary_bfs-8 : coverage_1 : 1700635.250000
+log_summary_bfs-8 : coverage_2 : 1720972.500000
+log_summary_bfs-8 : noninclusive : 1624236.500000
+log_summary_cc-13 : coverage_-1 : 3703652.500000
+log_summary_cc-13 : coverage_-2 : 4446587.000000
+log_summary_cc-13 : coverage_0 : 3281571.250000
+log_summary_cc-13 : coverage_1 : 2819857.750000
+log_summary_cc-13 : coverage_2 : 2980238.000000
+log_summary_cc-13 : noninclusive : 2350796.250000
+log_summary_cc-14 : coverage_-1 : 3618498.500000
+log_summary_cc-14 : coverage_-2 : 4348281.500000
+log_summary_cc-14 : coverage_0 : 3206944.250000
+log_summary_cc-14 : coverage_1 : 2755579.000000
+log_summary_cc-14 : coverage_2 : 2913617.000000
+log_summary_cc-14 : noninclusive : 2303292.250000
+log_summary_cc-5 : coverage_-1 : 3545279.500000
+log_summary_cc-5 : coverage_-2 : 4254217.750000
+log_summary_cc-5 : coverage_0 : 3143770.500000
+log_summary_cc-5 : coverage_1 : 2701761.500000
+log_summary_cc-5 : coverage_2 : 2854269.000000
+log_summary_cc-5 : noninclusive : 2262965.750000
+log_summary_cc-6 : coverage_-1 : 3972199.750000
+log_summary_cc-6 : coverage_-2 : 4772042.250000
+log_summary_cc-6 : coverage_0 : 3520192.250000
+log_summary_cc-6 : coverage_1 : 3024106.250000
+log_summary_cc-6 : coverage_2 : 3197345.750000
+log_summary_cc-6 : noninclusive : 2528540.750000
+log_summary_pr-10.trace : gz_coverage_-1 : No IPC values found
+log_summary_pr-10.trace : gz_coverage_-2 : No IPC values found
+log_summary_pr-10.trace : gz_coverage_0 : No IPC values found
+log_summary_pr-10.trace : gz_coverage_1 : No IPC values found
+log_summary_pr-10.trace : gz_coverage_2 : No IPC values found
+log_summary_pr-14.trace : gz_coverage_-1 : No IPC values found
+log_summary_pr-14.trace : gz_coverage_-2 : No IPC values found
+log_summary_pr-14.trace : gz_coverage_0 : No IPC values found
+log_summary_pr-14.trace : gz_coverage_1 : No IPC values found
+log_summary_pr-14.trace : gz_coverage_2 : No IPC values found
+log_summary_pr-3.trace : gz_coverage_-1 : No IPC values found
+log_summary_pr-3.trace : gz_coverage_-2 : No IPC values found
+log_summary_pr-3.trace : gz_coverage_0 : No IPC values found
+log_summary_pr-3.trace : gz_coverage_1 : No IPC values found
+log_summary_pr-3.trace : gz_coverage_2 : No IPC values found
+log_summary_pr-5.trace : gz_coverage_-1 : No IPC values found
+log_summary_pr-5.trace : gz_coverage_-2 : No IPC values found
+log_summary_pr-5.trace : gz_coverage_0 : No IPC values found
+log_summary_pr-5.trace : gz_coverage_1 : No IPC values found
+log_summary_pr-5.trace : gz_coverage_2 : No IPC values found
+log_summary_sssp-10 : coverage_-1 : 3213187.500000
+log_summary_sssp-10 : coverage_-2 : 3756338.000000
+log_summary_sssp-10 : coverage_0 : 2938986.750000
+log_summary_sssp-10 : coverage_1 : 2595094.000000
+log_summary_sssp-10 : coverage_2 : 2719722.500000
+log_summary_sssp-10 : noninclusive : 2190193.000000
+log_summary_sssp-14 : coverage_-1 : 3241765.750000
+log_summary_sssp-14 : coverage_-2 : 3792463.000000
+log_summary_sssp-14 : coverage_0 : 2960943.250000
+log_summary_sssp-14 : coverage_1 : 2615522.000000
+log_summary_sssp-14 : coverage_2 : 2737787.750000
+log_summary_sssp-14 : noninclusive : 2203545.250000
+log_summary_sssp-3 : coverage_-1 : 3268133.500000
+log_summary_sssp-3 : coverage_-2 : 3819634.000000
+log_summary_sssp-3 : coverage_0 : 2987508.250000
+log_summary_sssp-3 : coverage_1 : 2637654.500000
+log_summary_sssp-3 : coverage_2 : 2762184.500000
+log_summary_sssp-3 : noninclusive : 2233280.500000
+log_summary_sssp-5 : coverage_-1 : 3261678.000000
+log_summary_sssp-5 : coverage_-2 : 3811032.250000
+log_summary_sssp-5 : coverage_0 : 2981880.250000
+log_summary_sssp-5 : coverage_1 : 2633926.250000
+log_summary_sssp-5 : coverage_2 : 2755273.250000
+log_summary_sssp-5 : noninclusive : 2230348.000000
