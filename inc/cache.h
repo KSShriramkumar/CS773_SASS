@@ -92,7 +92,7 @@ public:
   #ifdef SASSCACHE
   uint64_t* key0;
   uint64_t* key1;
-  uint64_t npartition = 1;
+  uint64_t npartition = 16;
   void setKeys();
   std::vector<uint64_t> get_llc_set(uint64_t address, uint64_t cpu);
   uint8_t coverageBits = -1; // change
@@ -136,6 +136,7 @@ public:
     if (v1 == "LLC") {
       setKeys();
     }
+    std::cerr << "SassCache config with npartitions = " << npartition << std::endl;
     #endif
   }
 };

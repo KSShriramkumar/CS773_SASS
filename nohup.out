@@ -1,0 +1,40 @@
+coverage_2: src/main.cc:423: int main(int, char**): Assertion `0' failed.
+coverage_2: src/main.cc:423: int main(int, char**): Assertion `0' failed.
+coverage_0: src/main.cc:423: int main(int, char**): Assertion `0' failed.
+coverage_2: src/main.cc:423: int main(int, char**): Assertion `0' failed.
+coverage_0: src/main.cc:423: int main(int, char**): Assertion `0' failed.
+coverage_1: src/main.cc:423: int main(int, char**): Assertion `0' failed.
+coverage_-2: src/main.cc:423: int main(int, char**): Assertion `0' failed.
+coverage_-2: src/main.cc:423: int main(int, char**): Assertion `0' failed.
+coverage_0: src/main.cc:423: int main(int, char**): Assertion `0' failed.
+coverage_-1: src/main.cc:423: int main(int, char**): Assertion `0' failed.
+coverage_-2: src/main.cc:423: int main(int, char**): Assertion `0' failed.
+coverage_-1: src/main.cc:423: int main(int, char**): Assertion `0' failed.
+coverage_0: src/main.cc:423: int main(int, char**): Assertion `0' failed.
+coverage_1: src/main.cc:423: int main(int, char**): Assertion `0' failed.
+coverage_-1: src/main.cc:423: int main(int, char**): Assertion `0' failed.
+coverage_-1: src/main.cc:423: int main(int, char**): Assertion `0' failed.
+coverage_1: src/main.cc:423: int main(int, char**): Assertion `0' failed.
+coverage_-2: src/main.cc:423: int main(int, char**): Assertion `0' failed.
+coverage_1: src/main.cc:423: int main(int, char**): Assertion `0' failed.
+coverage_2: src/main.cc:423: int main(int, char**): Assertion `0' failed.
+script.sh: line 14:  8661 Aborted                 (core dumped) ./bin/final/$BIN --warmup_instructions 40000000 --simulation_instructions 100000000 "$TRACE_DIR/$TRACE" > "Results/$BIN/log_summary_${TRACE}_${BIN}"
+script.sh: line 14:  8666 Aborted                 (core dumped) ./bin/final/$BIN --warmup_instructions 40000000 --simulation_instructions 100000000 "$TRACE_DIR/$TRACE" > "Results/$BIN/log_summary_${TRACE}_${BIN}"
+script.sh: line 14:  8672 Aborted                 (core dumped) ./bin/final/$BIN --warmup_instructions 40000000 --simulation_instructions 100000000 "$TRACE_DIR/$TRACE" > "Results/$BIN/log_summary_${TRACE}_${BIN}"
+script.sh: line 14:  8674 Aborted                 (core dumped) ./bin/final/$BIN --warmup_instructions 40000000 --simulation_instructions 100000000 "$TRACE_DIR/$TRACE" > "Results/$BIN/log_summary_${TRACE}_${BIN}"
+script.sh: line 14:  8676 Aborted                 (core dumped) ./bin/final/$BIN --warmup_instructions 40000000 --simulation_instructions 100000000 "$TRACE_DIR/$TRACE" > "Results/$BIN/log_summary_${TRACE}_${BIN}"
+script.sh: line 14:  8678 Aborted                 (core dumped) ./bin/final/$BIN --warmup_instructions 40000000 --simulation_instructions 100000000 "$TRACE_DIR/$TRACE" > "Results/$BIN/log_summary_${TRACE}_${BIN}"
+script.sh: line 14:  8684 Aborted                 (core dumped) ./bin/final/$BIN --warmup_instructions 40000000 --simulation_instructions 100000000 "$TRACE_DIR/$TRACE" > "Results/$BIN/log_summary_${TRACE}_${BIN}"
+script.sh: line 14:  8686 Aborted                 (core dumped) ./bin/final/$BIN --warmup_instructions 40000000 --simulation_instructions 100000000 "$TRACE_DIR/$TRACE" > "Results/$BIN/log_summary_${TRACE}_${BIN}"
+script.sh: line 14:  8688 Aborted                 (core dumped) ./bin/final/$BIN --warmup_instructions 40000000 --simulation_instructions 100000000 "$TRACE_DIR/$TRACE" > "Results/$BIN/log_summary_${TRACE}_${BIN}"
+script.sh: line 14:  8690 Aborted                 (core dumped) ./bin/final/$BIN --warmup_instructions 40000000 --simulation_instructions 100000000 "$TRACE_DIR/$TRACE" > "Results/$BIN/log_summary_${TRACE}_${BIN}"
+script.sh: line 14:  8692 Aborted                 (core dumped) ./bin/final/$BIN --warmup_instructions 40000000 --simulation_instructions 100000000 "$TRACE_DIR/$TRACE" > "Results/$BIN/log_summary_${TRACE}_${BIN}"
+script.sh: line 14:  8694 Aborted                 (core dumped) ./bin/final/$BIN --warmup_instructions 40000000 --simulation_instructions 100000000 "$TRACE_DIR/$TRACE" > "Results/$BIN/log_summary_${TRACE}_${BIN}"
+script.sh: line 14:  8696 Aborted                 (core dumped) ./bin/final/$BIN --warmup_instructions 40000000 --simulation_instructions 100000000 "$TRACE_DIR/$TRACE" > "Results/$BIN/log_summary_${TRACE}_${BIN}"
+script.sh: line 14:  8698 Aborted                 (core dumped) ./bin/final/$BIN --warmup_instructions 40000000 --simulation_instructions 100000000 "$TRACE_DIR/$TRACE" > "Results/$BIN/log_summary_${TRACE}_${BIN}"
+script.sh: line 14:  8700 Aborted                 (core dumped) ./bin/final/$BIN --warmup_instructions 40000000 --simulation_instructions 100000000 "$TRACE_DIR/$TRACE" > "Results/$BIN/log_summary_${TRACE}_${BIN}"
+script.sh: line 14:  8702 Aborted                 (core dumped) ./bin/final/$BIN --warmup_instructions 40000000 --simulation_instructions 100000000 "$TRACE_DIR/$TRACE" > "Results/$BIN/log_summary_${TRACE}_${BIN}"
+script.sh: line 14:  8663 Aborted                 (core dumped) ./bin/final/$BIN --warmup_instructions 40000000 --simulation_instructions 100000000 "$TRACE_DIR/$TRACE" > "Results/$BIN/log_summary_${TRACE}_${BIN}"
+script.sh: line 14:  8670 Aborted                 (core dumped) ./bin/final/$BIN --warmup_instructions 40000000 --simulation_instructions 100000000 "$TRACE_DIR/$TRACE" > "Results/$BIN/log_summary_${TRACE}_${BIN}"
+script.sh: line 14:  8680 Aborted                 (core dumped) ./bin/final/$BIN --warmup_instructions 40000000 --simulation_instructions 100000000 "$TRACE_DIR/$TRACE" > "Results/$BIN/log_summary_${TRACE}_${BIN}"
+script.sh: line 14:  8682 Aborted                 (core dumped) ./bin/final/$BIN --warmup_instructions 40000000 --simulation_instructions 100000000 "$TRACE_DIR/$TRACE" > "Results/$BIN/log_summary_${TRACE}_${BIN}"
