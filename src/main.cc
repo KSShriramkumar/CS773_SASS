@@ -23,7 +23,7 @@
 #include <signal.h>
 #include <string.h>
 #include <vector>
-
+#include <fstream>
 #include "cache.h"
 #include "champsim.h"
 #include "champsim_constants.h"
@@ -32,6 +32,17 @@
 #include "operable.h"
 #include "tracereader.h"
 #include "vmem.h"
+#include <filesystem>
+namespace fs = std::filesystem;
+
+std::string get_basename(const std::string& path_str) {
+  fs::path path(path_str);
+  std::string basename = path.stem().string(); // filename without extension
+  return basename ;
+}
+std::string convert_to_csv(const std::string& path_str) {
+    return get_basename(path_str) + ".csv";
+}
 
 uint8_t warmup_complete[NUM_CPUS] = {}, simulation_complete[NUM_CPUS] = {}, all_warmup_complete = 0, all_simulation_complete = 0,
         MAX_INSTR_DESTINATIONS = NUM_INSTR_DESTINATIONS, knob_cloudsuite = 0, knob_low_bandwidth = 0;
@@ -111,6 +122,12 @@ void print_roi_stats(uint32_t cpu, CACHE* cache)
 
     cout << cache->NAME;
     cout << " AVERAGE MISS LATENCY: " << (1.0 * (cache->total_miss_latency)) / TOTAL_MISS << " cycles" << endl;
+    
+    
+    cout << cache->NAME;
+    cout << " SELF EVICTIONS: " << setw(10) << cache->SELF_EVICTIONS << endl;
+    cout << cache->NAME;
+    cout << " CROSS EVICTIONS: " << setw(10) << cache->CROSS_EVICTIONS << endl;
     // cout << " AVERAGE MISS LATENCY: " <<
     // (cache->total_miss_latency)/TOTAL_MISS << " cycles " <<
     // cache->total_miss_latency << "/" << TOTAL_MISS<< endl;
@@ -146,6 +163,11 @@ void print_sim_stats(uint32_t cpu, CACHE* cache)
     cout << cache->NAME;
     cout << " WRITEBACK ACCESS: " << setw(10) << cache->sim_access[cpu][3] << "  HIT: " << setw(10) << cache->sim_hit[cpu][3] << "  MISS: " << setw(10)
          << cache->sim_miss[cpu][3] << endl;
+
+    cout << cache->NAME;
+    cout << " SELF EVICTIONS: " << setw(10) << cache->SELF_EVICTIONS << endl;
+    cout << cache->NAME;
+    cout << " CROSS EVICTIONS: " << setw(10) << cache->CROSS_EVICTIONS << endl;
   }
 }
 
@@ -383,7 +405,9 @@ int main(int argc, char** argv)
   std::cout << "VirtualMemory page size: " << PAGE_SIZE << " log2_page_size: " << LOG2_PAGE_SIZE << std::endl;
 
   std::cout << std::endl;
+  std::string curr_trace;
   for (int i = optind; i < argc; i++) {
+    curr_trace = argv[i];
     std::cout << "CPU " << traces.size() << " runs " << argv[i] << std::endl;
 
     traces.push_back(get_tracereader(argv[i], traces.size(), knob_cloudsuite));
@@ -518,7 +542,15 @@ int main(int argc, char** argv)
 
   for (auto it = caches.rbegin(); it != caches.rend(); ++it)
     (*it)->impl_replacement_final_stats();
-
+  std::ofstream line_dist_file( get_basename(argv[0])  + convert_to_csv(curr_trace));
+  for(auto it = caches.rbegin(); it != caches.rend(); ++it){
+    if((*it)->NAME == "LLC"){
+      line_dist_file << "line_no, Core 0 lines , Core 1 lines" << std::endl; 
+      for(int i = 0; i < (*it)->block.size(); i++){
+        line_dist_file << i << " , " <<(*it)->block[i].core_access[0] << " , " << (*it)->block[i].core_access[1]<< std::endl;
+      }
+    }
+  }
 #ifndef CRC2_COMPILE
   print_dram_stats();
   print_branch_stats();

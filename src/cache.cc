@@ -130,13 +130,16 @@ void CACHE::handle_fill()
     #ifdef SASSCACHE
     if (check_string(NAME,"LLC")) {
       std::vector<uint64_t> indices = get_llc_set(fill_mshr->address, fill_mshr->cpu);
-
+      // for (int i=0; i < indices.size(); i++) {
+        // std::cerr << "indices[" << i << "] = " << indices[i] << "\n";
+      // }
       // replacement is random by default
       int rand_blk = idist(rgen);
 
       way = rand_blk;
       set = indices[rand_blk];
-
+      // assert(fill_mshr->cpu != 1);
+      if(warmup_complete[fill_mshr->cpu])block[NUM_WAY*set + way].core_access[fill_mshr->cpu]++;
     }
     else {
       set = get_set(fill_mshr->address);
@@ -159,9 +162,10 @@ void CACHE::handle_fill()
                                          fill_mshr->type);
     #endif
 
-
-
-
+    if(way != NUM_WAY && warmup_complete[cpu]){
+      if(fill_mshr->cpu == block[NUM_WAY*set + way].cpu) SELF_EVICTIONS++;
+      else CROSS_EVICTIONS++;
+      }
     bool success = filllike_miss(set, way, *fill_mshr);
     if (!success)
       return;
@@ -260,6 +264,10 @@ void CACHE::handle_writeback()
           way = impl_replacement_find_victim(handle_pkt.cpu, handle_pkt.instr_id, set, &block.data()[set * NUM_WAY], handle_pkt.ip, handle_pkt.address,
                                              handle_pkt.type);
         #endif
+      if(way != NUM_WAY && warmup_complete[cpu]){
+      if(handle_pkt.cpu == block[NUM_WAY*set + way].cpu) SELF_EVICTIONS++;
+      else CROSS_EVICTIONS++;
+      }
         success = filllike_miss(set, way, handle_pkt);
       }
 
@@ -300,6 +308,7 @@ void CACHE::handle_read()
 
       way = NUM_WAY;
       for (size_t i=0; i < NUM_WAY; i++) {
+          // std::cout << indices[i] << "\n";
         if((block[indices[i] * NUM_WAY + i].address >> LOG2_BLOCK_SIZE) == (handle_pkt.address>> LOG2_BLOCK_SIZE)){
 
             way = i;
@@ -603,6 +612,9 @@ std::vector<uint64_t> CACHE::get_llc_set(uint64_t address, uint64_t cpu) {
   uint32_t round1Iterations = (uint32_t) ceil(
           (double) npartition / indicesPerBlock);
 
+  // std::cerr << indicesPerBlock << " " << round1Iterations << " " << NUM_SET << " " << lg2(NUM_SET) <<  lg2(NUM_SET) + coverageBits << std::endl;
+  // exit(1);
+
   uint64_t* key;
   if (cpu) {
     key = key1;
@@ -632,12 +644,16 @@ std::vector<uint64_t> CACHE::get_llc_set(uint64_t address, uint64_t cpu) {
           c[1] = p;
           speck128Encrypt(c, c + 1, key);
           uint64_t idx = c[0] & nSetsMask;
-          for (size_t w = 0; w < size_t(partitionSize); w++)
-              wayIndices[p * partitionSize + w] = idx;
-          p++;
-          if (p == 1) {
-              return wayIndices;
+          for (size_t w = 0; w < size_t(partitionSize); w++) { 
+            wayIndices[p * partitionSize + w] = idx;
+            // std::cerr << "p * partitionSize + w = " << p * partitionSize + w << " idx = " << idx << "\n";
           }
+          
+          p++;
+          if (p == npartition) {
+            return wayIndices;
+          }
+
       }
   }
 

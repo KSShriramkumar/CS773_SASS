@@ -69,7 +69,7 @@ public:
            roi_hit[NUM_CPUS][NUM_TYPES] = {}, roi_miss[NUM_CPUS][NUM_TYPES] = {};
 
   uint64_t RQ_ACCESS = 0, RQ_MERGED = 0, RQ_FULL = 0, RQ_TO_CACHE = 0, PQ_ACCESS = 0, PQ_MERGED = 0, PQ_FULL = 0, PQ_TO_CACHE = 0, WQ_ACCESS = 0, WQ_MERGED = 0,
-           WQ_FULL = 0, WQ_FORWARD = 0, WQ_TO_CACHE = 0;
+           WQ_FULL = 0, WQ_FORWARD = 0, WQ_TO_CACHE = 0, CROSS_EVICTIONS = 0, SELF_EVICTIONS = 0;
 
   uint64_t total_miss_latency = 0;
 
@@ -92,10 +92,10 @@ public:
   #ifdef SASSCACHE
   uint64_t* key0;
   uint64_t* key1;
-  uint64_t npartition = 1;
+  uint64_t npartition = 16;
   void setKeys();
   std::vector<uint64_t> get_llc_set(uint64_t address, uint64_t cpu);
-  uint8_t coverageBits = -1; // change
+  int coverageBits = -2; // change
   #endif
 
   int invalidate_entry(uint64_t inval_addr);

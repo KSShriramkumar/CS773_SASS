@@ -47,7 +47,6 @@
 #define FILL_DRC 8
 #define FILL_DRAM 16
 
-#define SASSCACHE 1
 
 using namespace std;
 
