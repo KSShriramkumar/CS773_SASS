@@ -47,6 +47,9 @@
 #define FILL_DRC 8
 #define FILL_DRAM 16
 
+#define SASSCACHE
+#define TCHES_REPLPOL 1
+
 
 using namespace std;
 

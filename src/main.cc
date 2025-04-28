@@ -75,6 +75,11 @@ uint64_t champsim::deprecated_clock_cycle::operator[](std::size_t cpu_idx)
 
 void record_roi_stats(uint32_t cpu, CACHE* cache)
 {
+  // if (!cache->roiRecorded) {
+  //   cache->SELF_EVICTIONS = 0;
+  //   cache->CROSS_EVICTIONS = 0;
+  //   cache->roiRecorded = true;
+  // }
   for (uint32_t i = 0; i < NUM_TYPES; i++) {
     cache->roi_access[cpu][i] = cache->sim_access[cpu][i];
     cache->roi_hit[cpu][i] = cache->sim_hit[cpu][i];
@@ -533,8 +538,19 @@ int main(int argc, char** argv)
   for (uint32_t i = 0; i < NUM_CPUS; i++) {
     cout << endl << "CPU " << i << " cumulative IPC: " << ((float)ooo_cpu[i]->finish_sim_instr / ooo_cpu[i]->finish_sim_cycle);
     cout << " instructions: " << ooo_cpu[i]->finish_sim_instr << " cycles: " << ooo_cpu[i]->finish_sim_cycle << endl;
-    for (auto it = caches.rbegin(); it != caches.rend(); ++it)
+    for (auto it = caches.rbegin(); it != caches.rend(); ++it) {
       print_roi_stats(i, *it);
+      if((*it)->NAME == "LLC"){
+        // line_dist_file << "line_no, Core 0 lines , Core 1 lines" << std::endl; 
+        uint64_t blocksAccessed = 0; 
+        for(size_t j = 0; j < (*it)->block.size(); j++){
+          if ((*it)->block[j].core_access[i] != 0) {
+            blocksAccessed++;
+          }
+        }
+        cout << "Blocks accessed " << blocksAccessed << " out of total " << (*it)->block.size() << " blocks. Fraction = " << (((double)(blocksAccessed))/((double)((*it)->block.size()))) << endl;
+      }
+    }
   }
 
   for (auto it = caches.rbegin(); it != caches.rend(); ++it)
@@ -543,14 +559,7 @@ int main(int argc, char** argv)
   for (auto it = caches.rbegin(); it != caches.rend(); ++it)
     (*it)->impl_replacement_final_stats();
   std::ofstream line_dist_file( get_basename(argv[0])  + convert_to_csv(curr_trace));
-  for(auto it = caches.rbegin(); it != caches.rend(); ++it){
-    if((*it)->NAME == "LLC"){
-      line_dist_file << "line_no, Core 0 lines , Core 1 lines" << std::endl; 
-      for(int i = 0; i < (*it)->block.size(); i++){
-        line_dist_file << i << " , " <<(*it)->block[i].core_access[0] << " , " << (*it)->block[i].core_access[1]<< std::endl;
-      }
-    }
-  }
+
 #ifndef CRC2_COMPILE
   print_dram_stats();
   print_branch_stats();

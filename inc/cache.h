@@ -73,6 +73,8 @@ public:
 
   uint64_t total_miss_latency = 0;
 
+  bool roiRecorded = false;
+
   // functions
   int add_rq(PACKET* packet) override;
   int add_wq(PACKET* packet) override;
@@ -90,12 +92,11 @@ public:
   uint32_t get_way(uint64_t address, uint32_t set);
 
   #ifdef SASSCACHE
-  uint64_t* key0;
-  uint64_t* key1;
+  uint64_t* keyVec[NUM_CPUS]; 
   uint64_t npartition = 16;
   void setKeys();
   std::vector<uint64_t> get_llc_set(uint64_t address, uint64_t cpu);
-  int coverageBits = -2; // change
+  int coverageBits = -1; // change
   #endif
 
   int invalidate_entry(uint64_t inval_addr);
@@ -135,8 +136,15 @@ public:
     #ifdef SASSCACHE
     if (v1 == "LLC") {
       setKeys();
+      #ifdef TCHES_REPLPOL
+        for (size_t i=0; i < NUM_SET; i++) {
+          for (size_t j=0; j < NUM_WAY; j++) {
+            block[i*NUM_WAY + j].lruBit = j;
+          }
+        }
+      #endif
     }
-    std::cerr << "SassCache config with npartitions = " << npartition << std::endl;
+    // std::cerr << "SassCache config with npartitions = " << npartition << std::endl;
     #endif
   }
 };

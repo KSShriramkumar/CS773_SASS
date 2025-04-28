@@ -36,6 +36,7 @@ Note: All replacement policies are random
 #include "util.h"
 #include "vmem.h"
 
+uint64_t keyGen[2];
 
 //Shriram 
 #define LLC_WAYS 16
@@ -85,20 +86,20 @@ void speck128ExpandKey(uint64_t K[], uint64_t key[])
   }
 }
 
-std::pair<uint64_t*, uint64_t*> getKeys()
+uint64_t* getKey()
 {
-  uint64_t K[] = {0x06FADE6001020304, 0x01020304CAB4BEEF};
+  uint64_t* key = new uint64_t[32];
 
-  uint64_t* _keyId0 = new uint64_t[32];
-  uint64_t* _keyId1 = new uint64_t[32];
-  uint64_t* _keyIdOther = new uint64_t[32];
-
-  speck128ExpandKey(K, _keyId0);
-  K[0] ^= 0x1234ABCD1234ABCD;
-  speck128ExpandKey(K, _keyId1);
-  K[0] ^= 0x1234ABCD1234ABCD ^ 0xBCDE789ABCDE789A;
-  speck128ExpandKey(K, _keyIdOther);
-  return std::make_pair(_keyId0, _keyId1);
+  for (int j=0; j < 2; j++) {
+    keyGen[j] = 0;
+    for (int i=0; i < 8; i++) {
+      keyGen[j] |= (rand() % 256) << i;
+    }
+  }
+    
+  speck128ExpandKey(keyGen,key);
+    
+  return key;
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
@@ -134,10 +135,41 @@ void CACHE::handle_fill()
         // std::cerr << "indices[" << i << "] = " << indices[i] << "\n";
       // }
       // replacement is random by default
+      #ifdef TCHES_REPLPOL
+      bool foundInv = false;
+      for (size_t i=0; i < indices.size(); i++) {
+        if (!block[indices[i]*NUM_WAY + i].valid) {
+          set = indices[i];
+          way = i;
+          foundInv = true;
+        }
+      }
+      if (!foundInv) {
+        uint64_t leastLruBit = NUM_WAY + 1;
+        std::vector<uint64_t> candidates;
+        for (size_t i=0; i < indices.size(); i++) {
+          // way = i, set = indices[i]
+          // find lru bit
+          if (leastLruBit > block[indices[i]*NUM_WAY + i].lruBit) {
+            candidates.clear();
+            candidates.push_back(i);
+            leastLruBit = block[indices[i]*NUM_WAY + i].lruBit;
+          }
+          else if (leastLruBit == block[indices[i]*NUM_WAY + i].lruBit) {
+            candidates.push_back(i);
+          }
+        }
+        // now, choose randomly among candidates
+        way = candidates[rand()%candidates.size()];
+        set = indices[way];
+      }
+
+      #else
       int rand_blk = idist(rgen);
 
       way = rand_blk;
       set = indices[rand_blk];
+      #endif
       // assert(fill_mshr->cpu != 1);
       if(warmup_complete[fill_mshr->cpu])block[NUM_WAY*set + way].core_access[fill_mshr->cpu]++;
     }
@@ -162,13 +194,22 @@ void CACHE::handle_fill()
                                          fill_mshr->type);
     #endif
 
-    if(way != NUM_WAY && warmup_complete[cpu]){
-      if(fill_mshr->cpu == block[NUM_WAY*set + way].cpu) SELF_EVICTIONS++;
-      else CROSS_EVICTIONS++;
-      }
     bool success = filllike_miss(set, way, *fill_mshr);
     if (!success)
       return;
+
+    #ifdef SASSCACHE
+    #ifdef TCHES_REPLPOL
+    if (check_string(NAME,"LLC")) {
+      for (size_t i=0; i < NUM_WAY; i++) {
+        if (block[set*NUM_WAY + i].lruBit > block[set*NUM_WAY + way].lruBit) {
+          block[set*NUM_WAY + i].lruBit--;
+        }
+      }
+      block[set*NUM_WAY + way].lruBit = NUM_WAY - 1;
+    } 
+    #endif
+    #endif
 
     if (way != NUM_WAY) {
       // update processed packets
@@ -237,10 +278,41 @@ void CACHE::handle_writeback()
         if (check_string(NAME,"LLC")) {
           std::vector<uint64_t> indices = get_llc_set(handle_pkt.address, handle_pkt.cpu);
     
+          #ifdef TCHES_REPLPOL
+          bool foundInv = false;
+          for (size_t i=0; i < indices.size(); i++) {
+            if (!block[indices[i]*NUM_WAY + i].valid) {
+              set = indices[i];
+              way = i;
+              foundInv = true;
+            }
+          }
+          if (!foundInv) {
+            uint64_t leastLruBit = NUM_WAY + 1;
+            std::vector<uint64_t> candidates;
+            for (size_t i=0; i < indices.size(); i++) {
+              // way = i, set = indices[i]
+              // find lru bit
+              if (leastLruBit > block[indices[i]*NUM_WAY + i].lruBit) {
+                candidates.clear();
+                candidates.push_back(i);
+                leastLruBit = block[indices[i]*NUM_WAY + i].lruBit;
+              }
+              else if (leastLruBit == block[indices[i]*NUM_WAY + i].lruBit) {
+                candidates.push_back(i);
+              }
+            }
+            // now, choose randomly among candidates
+            way = candidates[rand()%candidates.size()];
+            set = indices[way];
+          }
+
+          #else
           int rand_blk = idist(rgen);
 
           way = rand_blk;
           set = indices[rand_blk];
+          #endif
   
     
         }
@@ -264,10 +336,6 @@ void CACHE::handle_writeback()
           way = impl_replacement_find_victim(handle_pkt.cpu, handle_pkt.instr_id, set, &block.data()[set * NUM_WAY], handle_pkt.ip, handle_pkt.address,
                                              handle_pkt.type);
         #endif
-      if(way != NUM_WAY && warmup_complete[cpu]){
-      if(handle_pkt.cpu == block[NUM_WAY*set + way].cpu) SELF_EVICTIONS++;
-      else CROSS_EVICTIONS++;
-      }
         success = filllike_miss(set, way, handle_pkt);
       }
 
@@ -322,6 +390,18 @@ void CACHE::handle_read()
     if (way < NUM_WAY) // HIT
     {
       readlike_hit(set, way, handle_pkt);
+      #ifdef SASSCACHE
+      #ifdef TCHES_REPLPOL
+      if (check_string(NAME,"LLC")) {
+        for (size_t i=0; i < NUM_WAY; i++) {
+          if (block[set*NUM_WAY + i].lruBit > block[set*NUM_WAY + way].lruBit) {
+            block[set*NUM_WAY + i].lruBit--;
+          }
+        }
+        block[set*NUM_WAY + way].lruBit = NUM_WAY - 1;
+      } 
+      #endif
+      #endif
     } else {
       bool success = readlike_miss(handle_pkt);
       if (!success)
@@ -514,6 +594,17 @@ bool CACHE::filllike_miss(std::size_t set, std::size_t way, PACKET& handle_pkt)
         return false;
     }
 
+    // bool isWarmupOver = true;
+    // for (int i=0; i < NUM_CPUS; i++) {
+    //   if (!warmup_complete[i]) {
+    //     isWarmupOver = false;
+    //     break;
+    //   }
+    // }
+
+    if(handle_pkt.cpu == block[NUM_WAY*set + way].cpu && warmup_complete[handle_pkt.cpu]) SELF_EVICTIONS++;
+    else if (warmup_complete[handle_pkt.cpu] || warmup_complete[block[set*NUM_WAY + way].cpu]) CROSS_EVICTIONS++;
+
     if (ever_seen_data)
       evicting_address = fill_block.address & ~bitmask(match_offset_bits ? 0 : OFFSET_BITS);
     else
@@ -538,6 +629,8 @@ bool CACHE::filllike_miss(std::size_t set, std::size_t way, PACKET& handle_pkt)
 
   if (warmup_complete[handle_pkt.cpu] && (handle_pkt.cycle_enqueued != 0))
     total_miss_latency += current_cycle - handle_pkt.cycle_enqueued;
+
+
 
   // update prefetcher
   cpu = handle_pkt.cpu;
@@ -589,9 +682,9 @@ void CACHE::operate_reads()
 #ifdef SASSCACHE
 
 void CACHE::setKeys() {
-  std::pair<uint64_t*, uint64_t*> keys = getKeys();
-  key0 = keys.first;
-  key1 = keys.second;
+  for (size_t i=0; i < NUM_CPUS; i++) {
+    keyVec[i] = getKey();
+  }
 }
 
 std::vector<uint64_t> CACHE::get_llc_set(uint64_t address, uint64_t cpu) {
@@ -615,13 +708,7 @@ std::vector<uint64_t> CACHE::get_llc_set(uint64_t address, uint64_t cpu) {
   // std::cerr << indicesPerBlock << " " << round1Iterations << " " << NUM_SET << " " << lg2(NUM_SET) <<  lg2(NUM_SET) + coverageBits << std::endl;
   // exit(1);
 
-  uint64_t* key;
-  if (cpu) {
-    key = key1;
-  }
-  else {
-    key = key0;
-  }
+  uint64_t* key = keyVec[cpu];
 
   uint64_t cl = address >> LOG2_BLOCK_SIZE;
 

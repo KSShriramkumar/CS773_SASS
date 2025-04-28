@@ -36,10 +36,22 @@ public:
   bool valid = false, prefetch = false, dirty = false;
 
   uint64_t address = 0, v_address = 0, tag = 0, data = 0, ip = 0, cpu = 0, instr_id = 0;
-  std::vector<uint64_t>core_access{0,0};
+  uint64_t core_access[NUM_CPUS];
+
+  #ifdef TCHES_REPLPOL
+  uint64_t lruBit;
+  #endif
 
   // replacement state
   uint32_t lru = std::numeric_limits<uint32_t>::max() >> 1;
+  BLOCK() {
+    for (size_t i=0; i < NUM_CPUS; i++) {
+      core_access[i] = 0;
+    }
+    #ifdef TCHES_REPLPOL
+    lruBit = 0;
+    #endif
+  }
 };
 
 class MemoryRequestConsumer

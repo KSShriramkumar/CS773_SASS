@@ -8,7 +8,7 @@ LDLIBS :=
 
 .phony: all clean
 
-all: bin/champsim
+all: bin/sasscache-ncore/4
 
 clean: 
 	$(RM) inc/champsim_constants.h
@@ -30,7 +30,7 @@ clean:
 	 find btb/basic_btb -name \*.o -delete
 	 find btb/basic_btb -name \*.d -delete
 
-bin/champsim: $(patsubst %.cc,%.o,$(wildcard src/*.cc)) obj/repl_rreplacementDlru.a obj/pref_pprefetcherDno.a obj/pref_pprefetcherDno_instr.a obj/bpred_bbranchDbimodal.a obj/btb_bbtbDbasic_btb.a
+bin/sasscache-ncore/4: $(patsubst %.cc,%.o,$(wildcard src/*.cc)) obj/repl_rreplacementDlru.a obj/pref_pprefetcherDno.a obj/pref_pprefetcherDno_instr.a obj/bpred_bbranchDbimodal.a obj/btb_bbtbDbasic_btb.a
 	$(CXX) $(LDFLAGS) -o $@ $^ $(LDLIBS)
 
 replacement/lru/%.o: CFLAGS += -Ireplacement/lru
