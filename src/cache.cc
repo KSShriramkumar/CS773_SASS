@@ -93,7 +93,7 @@ uint64_t* getKey()
   for (int j=0; j < 2; j++) {
     keyGen[j] = 0;
     for (int i=0; i < 8; i++) {
-      keyGen[j] |= (rand() % 256) << i;
+      keyGen[j] |= (rand() % 256) << (i*8);
     }
   }
     
